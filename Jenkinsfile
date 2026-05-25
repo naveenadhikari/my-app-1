@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'my-app'
         CONTAINER_NAME = 'my-app-running'
+        BRANCH_TAG = "${env.BRANCH_NAME}".replace('/', '-')
     }
 
     stages {
@@ -32,7 +33,7 @@ pipeline {
         stage('Build Docker Image') {
             agent any
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${env.BRANCH_NAME} ."
+                sh "docker build -t ${IMAGE_NAME}:${BRANCH_TAG} ."
             }
         }
 
@@ -49,7 +50,7 @@ pipeline {
                     docker run -d \
                         --name ${IMAGE_NAME}-staging \
                         -p 3001:3000 \
-                        ${IMAGE_NAME}:${env.BRANCH_NAME}
+                        ${IMAGE_NAME}:${BRANCH_TAG}
                 """
                 echo "Staging live at http://localhost:3001"
             }
@@ -69,11 +70,12 @@ pipeline {
                         --name ${CONTAINER_NAME} \
                         --restart unless-stopped \
                         -p 3000:3000 \
-                        ${IMAGE_NAME}:${env.BRANCH_NAME}
+                        ${IMAGE_NAME}:${BRANCH_TAG}
                 """
                 echo "Production live at http://localhost:3000"
             }
         }
+
     }
 
     post {
