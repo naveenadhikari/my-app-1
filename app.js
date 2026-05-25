@@ -5,6 +5,9 @@ app.get('/', (req, res) => {
   res.json({ message: 'Hello from CI/CD!' });
    
 });
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello from feature branch!' });
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

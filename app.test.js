@@ -5,6 +5,7 @@ test('GET / returns hello message', async () => {
   const res = await request(app).get('/');
   expect(res.statusCode).toBe(200);
   expect(res.body.message).toBe('Hello from CI/CD!');
+  expect(res.body.message).toBe('Hello from feature branch!');
 });
 
 test('GET /health returns ok', async () => {
