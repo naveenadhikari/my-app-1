@@ -71,7 +71,7 @@ pipeline {
                         ${IMAGE_NAME}:${BRANCH_TAG}
                 """
 
-                // Wait for container to boot then health check
+                
                 retry(5) {
                     sleep(time: 10, unit: 'SECONDS')
                     sh "curl -f http://172.17.0.1:${STAGING_PORT}/health"
