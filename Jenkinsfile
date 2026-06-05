@@ -74,7 +74,7 @@ pipeline {
                 // Wait for container to boot then health check
                 retry(5) {
                     sleep(time: 10, unit: 'SECONDS')
-                    sh "curl -f http://localhost:${STAGING_PORT}/health"
+                    sh "curl -f http://172.17.0.1:${STAGING_PORT}/health"
                 }
 
                 echo "Staging live and healthy at http://localhost:${STAGING_PORT}"
@@ -109,49 +109,52 @@ pipeline {
         }
     }
 
-    post {
-        success {
-            mail(
-                to:      "${NOTIFY_EMAIL}",
-                subject: "✅ PASSED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body:    """
-                    Build passed!
-
-                    Job:    ${env.JOB_NAME}
-                    Branch: ${env.BRANCH_NAME}
-                    Build:  #${env.BUILD_NUMBER}
-                    URL:    ${env.BUILD_URL}
-                """
-            )
-            slackSend(
-                channel: "${SLACK_CHANNEL}",
-                color:   'good',
-                message: "✅ *PASSED* | *${env.JOB_NAME}* | Branch: `${env.BRANCH_NAME}` | Build #${env.BUILD_NUMBER} | <${env.BUILD_URL}|Open>"
-            )
-        }
-
-        failure {
-            mail(
-                to:      "${NOTIFY_EMAIL}",
-                subject: "❌ FAILED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body:    """
-                    Build FAILED — please investigate.
-
-                    Job:    ${env.JOB_NAME}
-                    Branch: ${env.BRANCH_NAME}
-                    Build:  #${env.BUILD_NUMBER}
-                    URL:    ${env.BUILD_URL}
-                """
-            )
-            slackSend(
-                channel: "${SLACK_CHANNEL}",
-                color:   'danger',
-                message: "❌ *FAILED* | *${env.JOB_NAME}* | Branch: `${env.BRANCH_NAME}` | Build #${env.BUILD_NUMBER} | <${env.BUILD_URL}|Open>"
-            )
-        }
-
-        always {
-            echo "Pipeline finished — Branch: ${env.BRANCH_NAME} | Build: #${env.BUILD_NUMBER}"
+   post {
+    success {
+        mail(
+            to:      "${NOTIFY_EMAIL}",
+            subject: "✅ PASSED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body:    """
+                Build passed!
+                Job:    ${env.JOB_NAME}
+                Branch: ${env.BRANCH_NAME}
+                Build:  #${env.BUILD_NUMBER}
+                URL:    ${env.BUILD_URL}
+            """
+        )
+        withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
+            sh """
+                curl -X POST \$SLACK_URL \
+                -H 'Content-type: application/json' \
+                --data '{"text":"✅ *PASSED* | *${env.JOB_NAME}* | Branch: ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}"}'
+            """
         }
     }
+
+    failure {
+        mail(
+            to:      "${NOTIFY_EMAIL}",
+            subject: "❌ FAILED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body:    """
+                Build FAILED — please investigate.
+                Job:    ${env.JOB_NAME}
+                Branch: ${env.BRANCH_NAME}
+                Build:  #${env.BUILD_NUMBER}
+                URL:    ${env.BUILD_URL}
+            """
+        )
+        withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
+            sh """
+                curl -X POST \$SLACK_URL \
+                -H 'Content-type: application/json' \
+                --data '{"text":"❌ *FAILED* | *${env.JOB_NAME}* | Branch: ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}"}'
+            """
+        }
+    }
+
+    always {
+        echo "Pipeline finished — Branch: ${env.BRANCH_NAME} | Build: #${env.BUILD_NUMBER}"
+    }
+}
+
 }
