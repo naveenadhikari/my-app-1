@@ -10,7 +10,7 @@ pipeline {
         CONTAINER_NAME = 'my-app-running'
         BRANCH_TAG     = "${env.BRANCH_NAME}".replace('/', '-')
 
-        NOTIFY_EMAIL   = 'your@gmail.com'       // change this
+        NOTIFY_EMAIL   = 'naveenadhikari08.17@gmail.com'       
         SLACK_CHANNEL  = '#all-my-app'
 
         STAGING_PORT   = '3001'
@@ -132,7 +132,7 @@ pipeline {
 
         failure {
             mail(
-                to:      "${naveenadhikari08.17@gmail.com}",
+                to:      "${NOTIFY_EMAIL}",
                 subject: "❌ FAILED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body:    """
                     Build FAILED — please investigate.
