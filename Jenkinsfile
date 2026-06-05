@@ -109,46 +109,50 @@ pipeline {
         }
     }
 
-   post {
+  post {
     success {
-        mail(
-            to:      "${NOTIFY_EMAIL}",
-            subject: "✅ PASSED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body:    """
-                Build passed!
-                Job:    ${env.JOB_NAME}
-                Branch: ${env.BRANCH_NAME}
-                Build:  #${env.BUILD_NUMBER}
-                URL:    ${env.BUILD_URL}
-            """
-        )
-        withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
-            sh """
-                curl -X POST \$SLACK_URL \
-                -H 'Content-type: application/json' \
-                --data '{"text":"✅ *PASSED* | *${env.JOB_NAME}* | Branch: ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}"}'
-            """
+        node('built-in') {
+            mail(
+                to:      "${NOTIFY_EMAIL}",
+                subject: "✅ PASSED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body:    """
+                    Build passed!
+                    Job:    ${env.JOB_NAME}
+                    Branch: ${env.BRANCH_NAME}
+                    Build:  #${env.BUILD_NUMBER}
+                    URL:    ${env.BUILD_URL}
+                """
+            )
+            withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
+                sh """
+                    curl -X POST \$SLACK_URL \
+                    -H 'Content-type: application/json' \
+                    --data '{"text":"✅ *PASSED* | *${env.JOB_NAME}* | Branch: ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}"}'
+                """
+            }
         }
     }
 
     failure {
-        mail(
-            to:      "${NOTIFY_EMAIL}",
-            subject: "❌ FAILED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body:    """
-                Build FAILED — please investigate.
-                Job:    ${env.JOB_NAME}
-                Branch: ${env.BRANCH_NAME}
-                Build:  #${env.BUILD_NUMBER}
-                URL:    ${env.BUILD_URL}
-            """
-        )
-        withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
-            sh """
-                curl -X POST \$SLACK_URL \
-                -H 'Content-type: application/json' \
-                --data '{"text":"❌ *FAILED* | *${env.JOB_NAME}* | Branch: ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}"}'
-            """
+        node('built-in') {
+            mail(
+                to:      "${NOTIFY_EMAIL}",
+                subject: "❌ FAILED — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body:    """
+                    Build FAILED — please investigate.
+                    Job:    ${env.JOB_NAME}
+                    Branch: ${env.BRANCH_NAME}
+                    Build:  #${env.BUILD_NUMBER}
+                    URL:    ${env.BUILD_URL}
+                """
+            )
+            withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
+                sh """
+                    curl -X POST \$SLACK_URL \
+                    -H 'Content-type: application/json' \
+                    --data '{"text":"❌ *FAILED* | *${env.JOB_NAME}* | Branch: ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}"}'
+                """
+            }
         }
     }
 
@@ -156,5 +160,4 @@ pipeline {
         echo "Pipeline finished — Branch: ${env.BRANCH_NAME} | Build: #${env.BUILD_NUMBER}"
     }
 }
-
 }
